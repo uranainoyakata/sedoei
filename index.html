@@ -63,7 +63,7 @@
             "GUCCIかばん": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
             "シャネルかばん": { path: "images/nature/", count: 30, extension: "jpeg" },
             "ビトンかばん": { path: "images/cats/", count: 25, extension: "jpeg" },
-            "プラダかばん": { path: "images/cars/", count: 18, extension: "jpeg" },
+            "Classic Cars": { path: "images/cars/", count: 18, extension: "jpeg" },
             "Space & Cosmos": { path: "images/space/", count: 22, extension: "jpeg" },
             "歴史": { path: "images/history/", count: 15, extension: "jpeg" },
         };
@@ -169,21 +169,20 @@
         
         // --- Hooks ---
         const useSwipe = (key, { onSwipeLeft, onSwipeRight, onSwipeMove }) => {
-            const [style, setStyle] = useState({});
+            const [style, setStyle] = useState({
+                transform: 'translateX(0px) rotate(0deg)',
+                transition: 'none',
+            });
             const isSwiping = useRef(false);
             const startX = useRef(0);
             const currentX = useRef(0);
-
-            const resetStyle = useCallback(() => {
-                setStyle({
-                    transform: 'translateX(0px) rotate(0deg)',
-                    transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                });
-            }, []);
             
             useEffect(() => {
-                resetStyle();
-            }, [key, resetStyle]);
+                setStyle({
+                    transform: 'translateX(0px) rotate(0deg)',
+                    transition: 'none',
+                });
+            }, [key]);
 
             const handleSwipeMoveInternal = useCallback((e) => {
                 if (!isSwiping.current) return;
@@ -216,7 +215,10 @@
                 const threshold = window.innerWidth / 4;
 
                 if (Math.abs(diffX) < threshold) {
-                    resetStyle();
+                    setStyle({
+                        transform: 'translateX(0px) rotate(0deg)',
+                        transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    });
                     onSwipeMove?.(0);
                     return;
                 }
@@ -235,7 +237,7 @@
                     }
                 }, 200);
 
-            }, [handleSwipeMoveInternal, onSwipeLeft, onSwipeRight, resetStyle, onSwipeMove]);
+            }, [handleSwipeMoveInternal, onSwipeLeft, onSwipeRight, onSwipeMove]);
 
             const handleSwipeStartInternal = useCallback((e) => {
                 isSwiping.current = true;
@@ -357,7 +359,7 @@
                             className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             <span>{isAnswerVisible ? '✅' : '👁️'}</span>
-                            <span>{isAnswerVisible ? '隠す' : ''}</span>
+                            <span>{isAnswerVisible ? '隠す' : '答えを見る'}</span>
                         </button>
                     </div>
 
