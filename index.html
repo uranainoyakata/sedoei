@@ -9,9 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            overscroll-behavior: contain; 
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: contain;
             -webkit-user-select: none;
             user-select: none;
         }
@@ -28,19 +28,22 @@
         .card-shadow {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
-        .gradient-overlay {
-            background: linear-gradient(to top, 
-                rgba(0,0,0,0.8) 0%, 
-                rgba(0,0,0,0.4) 40%, 
-                transparent 100%);
+        .answer-overlay {
+            background: linear-gradient(to top,
+                rgba(0,0,0,0.9) 0%,
+                rgba(0,0,0,0.7) 30%,
+                rgba(0,0,0,0.3) 70%,
+               transparent 100%);
+            height: 16.666667%; /* 6分の1 */
+            bottom: 0;
         }
-        .like-indicator {
+        .prev-indicator {
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            transform: rotate(-15deg);
+        }
+        .next-indicator {
             background: linear-gradient(45deg, #10b981, #059669);
-            transform: rotate(-30deg);
-        }
-        .nope-indicator {
-            background: linear-gradient(45deg, #ef4444, #dc2626);
-            transform: rotate(30deg);
+            transform: rotate(15deg);
         }
         .floating-button {
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
@@ -51,46 +54,38 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-pink-100 via-purple-50 to-indigo-100 min-h-screen overflow-hidden">
-
+<body class="bg-gradient-to-br from-blue-100 via-purple-50 to-green-100 min-h-screen overflow-hidden">
     <div class="flex flex-col h-screen max-w-sm mx-auto bg-white">
-        <!-- ヘッダー -->
         <header class="bg-white shadow-sm px-6 py-4 flex-shrink-0">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-xl font-bold text-gray-800">暗記カード</h1>
-                    <p class="text-xs text-gray-500">スワイプして学習しよう</p>
+                    <p class="text-xs text-gray-500">スワイプで問題を切り替え</p>
                 </div>
                 <div class="text-2xl">🧠</div>
             </div>
         </header>
 
-        <!-- ジャンル選択 -->
         <div class="px-6 py-3 bg-gray-50 flex-shrink-0">
-            <select id="genre-select" class="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition">
+            <select id="genre-select" class="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                 <option value="">ジャンルを選択 ✨</option>
             </select>
         </div>
 
-        <!-- カードスタック -->
         <div class="flex-1 relative overflow-hidden px-4 py-6 card-stack">
-            <!-- 背景カード（次のカード用） -->
             <div class="absolute inset-4 bg-gray-100 rounded-3xl opacity-30"></div>
             <div class="absolute inset-4 bg-gray-200 rounded-3xl opacity-20 transform scale-95"></div>
-            
-            <!-- メインカード -->
+
             <div id="card-container" class="relative w-full h-full">
                 <div id="image-card" class="absolute inset-0 bg-white rounded-3xl card-shadow card overflow-hidden cursor-grab active:cursor-grabbing">
-                    
-                    <!-- Like/Nope インジケーター -->
-                    <div id="like-indicator" class="absolute top-8 left-8 px-4 py-2 text-white font-bold text-lg like-indicator rounded-lg opacity-0 z-20">
-                        覚えた! ✓
+
+                    <div id="prev-indicator" class="absolute top-8 left-8 px-4 py-2 text-white font-bold text-lg prev-indicator rounded-lg opacity-0 z-20">
+                        ← 前の問題
                     </div>
-                    <div id="nope-indicator" class="absolute top-8 right-8 px-4 py-2 text-white font-bold text-lg nope-indicator rounded-lg opacity-0 z-20">
-                        もう一度 ↻
+                    <div id="next-indicator" class="absolute top-8 right-8 px-4 py-2 text-white font-bold text-lg next-indicator rounded-lg opacity-0 z-20">
+                        次の問題 →
                     </div>
 
-                    <!-- プレースホルダー -->
                     <div id="no-image-placeholder" class="w-full h-full flex flex-col items-center justify-center">
                         <div class="text-8xl mb-6">📚</div>
                         <h3 class="text-xl font-semibold text-gray-700 mb-2">学習を始めよう!</h3>
@@ -100,15 +95,13 @@
                         </p>
                     </div>
 
-                    <!-- 画像 -->
-                    <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-cover hidden">
-                    
-                    <!-- グラデーションオーバーレイ -->
-                    <div id="overlay" class="absolute inset-0 gradient-overlay opacity-0 transition-opacity duration-500">
-                        <div class="absolute bottom-8 left-6 right-6">
-                            <div class="text-white">
-                                <p class="text-lg font-semibold mb-2">答えが隠されています</p>
-                                <p class="text-gray-200 text-sm">タップで答えを表示</p>
+                    <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-contain hidden">
+
+                    <div id="answer-overlay" class="absolute left-0 right-0 answer-overlay opacity-0 transition-opacity duration-300">
+                        <div class="absolute bottom-4 left-4 right-4 text-center">
+                            <div class="bg-black/20 backdrop-blur-sm rounded-lg p-3">
+                                <p class="text-white text-sm font-medium">🔒 答えが隠されています</p>
+                                <p class="text-gray-200 text-xs mt-1">下のボタンをタップして表示</p>
                             </div>
                         </div>
                     </div>
@@ -116,27 +109,16 @@
             </div>
         </div>
 
-        <!-- ボトムアクション -->
         <div class="flex-shrink-0 px-6 pb-8 pt-4">
-            <div class="flex items-center justify-center space-x-4">
-                <!-- やり直しボタン -->
-                <button id="nope-btn" class="w-14 h-14 bg-white rounded-full flex items-center justify-center floating-button border-2 border-red-200 disabled:opacity-30" disabled>
-                    <span class="text-red-500 text-xl">↻</span>
-                </button>
-                
-                <!-- 答えを見るボタン -->
-                <button id="reveal-btn" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-4 px-6 rounded-2xl floating-button disabled:opacity-30" disabled>
+            <div class="flex items-center justify-center">
+                <button id="reveal-btn" class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-4 px-6 rounded-2xl floating-button disabled:opacity-30" disabled>
                     答えを見る 👁️
                 </button>
-                
-                <!-- 覚えたボタン -->
-                <button id="like-btn" class="w-14 h-14 bg-white rounded-full flex items-center justify-center floating-button border-2 border-green-200 disabled:opacity-30" disabled>
-                    <span class="text-green-500 text-xl">✓</span>
-                </button>
             </div>
-            
-            <div class="text-center mt-3">
-                <p class="text-xs text-gray-400">← もう一度 | 覚えた →</p>
+
+            <div class="text-center mt-4 space-y-2">
+                <p class="text-sm text-gray-600">スワイプで操作</p>
+                <p class="text-xs text-gray-400">← 前の問題 | 次の問題 →</p>
             </div>
         </div>
     </div>
@@ -148,7 +130,7 @@
                 "GUCCIかばん": {
                     path: "images/gushikaban/",
                     count: 56,
-                    extension: "jpeg"
+                    extension: "jpg"
                 },
                 "科学": {
                     path: "images/science/",
@@ -166,16 +148,14 @@
             const genreSelect = document.getElementById('genre-select');
             const imageCard = document.getElementById('image-card');
             const imageElem = document.getElementById('image');
-            const overlay = document.getElementById('overlay');
+            const answerOverlay = document.getElementById('answer-overlay');
             const revealBtn = document.getElementById('reveal-btn');
-            const likeBtn = document.getElementById('like-btn');
-            const nopeBtn = document.getElementById('nope-btn');
             const placeholder = document.getElementById('no-image-placeholder');
-            const likeIndicator = document.getElementById('like-indicator');
-            const nopeIndicator = document.getElementById('nope-indicator');
+            const prevIndicator = document.getElementById('prev-indicator');
+            const nextIndicator = document.getElementById('next-indicator');
 
             let currentGenreInfo = null;
-            let lastImageNumber = -1;
+            let currentImageNumber = 1;
             let isDragging = false;
             let startX = 0, startY = 0, currentX = 0, currentY = 0;
 
@@ -183,69 +163,66 @@
             function showPlaceholder() {
                 placeholder.classList.remove('hidden');
                 imageElem.classList.add('hidden');
-                overlay.style.opacity = '0';
-                disableButtons();
+                answerOverlay.style.opacity = '0';
+                revealBtn.disabled = true;
             }
 
             function hidePlaceholder() {
                 placeholder.classList.add('hidden');
                 imageElem.classList.remove('hidden');
-                enableButtons();
-            }
-
-            function enableButtons() {
                 revealBtn.disabled = false;
-                likeBtn.disabled = false;
-                nopeBtn.disabled = false;
             }
 
-            function disableButtons() {
-                revealBtn.disabled = true;
-                likeBtn.disabled = true;
-                nopeBtn.disabled = true;
-            }
-
-            // ランダム画像読み込み
-            function loadRandomImage() {
+            // 画像読み込み
+            function loadImage(imageNumber) {
                 if (!currentGenreInfo || currentGenreInfo.count === 0) {
                     showPlaceholder();
                     return;
                 }
 
-                let randomNum;
-                if (currentGenreInfo.count > 1) {
-                    do {
-                        randomNum = Math.floor(Math.random() * currentGenreInfo.count) + 1;
-                    } while (randomNum === lastImageNumber);
-                } else {
-                    randomNum = 1;
-                }
-                
-                lastImageNumber = randomNum;
-                const imagePath = `${currentGenreInfo.path}${randomNum}.${currentGenreInfo.extension}`;
-                
+                // 画像番号を範囲内に調整
+                if (imageNumber < 1) imageNumber = currentGenreInfo.count;
+                if (imageNumber > currentGenreInfo.count) imageNumber = 1;
+
+                currentImageNumber = imageNumber;
+                const imagePath = `${currentGenreInfo.path}${imageNumber}.${currentGenreInfo.extension}`;
+
+                console.log('画像を読み込み中:', imagePath, `(${currentImageNumber}/${currentGenreInfo.count})`);
+
                 imageElem.src = imagePath;
                 hidePlaceholder();
-                overlay.style.opacity = '1';
-                
+
+                // 答えを隠す
+                answerOverlay.style.opacity = '1';
+
                 // インジケーターリセット
-                likeIndicator.style.opacity = '0';
-                nopeIndicator.style.opacity = '0';
+                prevIndicator.style.opacity = '0';
+                nextIndicator.style.opacity = '0';
+            }
+
+            // 次の画像
+            function nextImage() {
+                loadImage(currentImageNumber + 1);
+            }
+
+            // 前の画像
+            function prevImage() {
+                loadImage(currentImageNumber - 1);
             }
 
             // カードアニメーション
             function animateCard(direction, callback) {
-                const rotation = direction === 'right' ? 30 : -30;
+                const rotation = direction === 'right' ? 20 : -20;
                 const translateX = direction === 'right' ? 400 : -400;
-                
-                imageCard.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                imageCard.style.transform = `translateX(${translateX}px) translateY(-50px) rotate(${rotation}deg) scale(0.8)`;
-                
+
+                imageCard.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                imageCard.style.transform = `translateX(${translateX}px) rotate(${rotation}deg) scale(0.9)`;
+
                 setTimeout(() => {
                     imageCard.style.transition = 'transform 0.3s ease';
                     imageCard.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
                     if (callback) callback();
-                }, 600);
+                }, 400);
             }
 
             // ジャンル変更
@@ -257,7 +234,8 @@
                     return;
                 }
                 currentGenreInfo = imageData[selectedGenre] || null;
-                loadRandomImage();
+                currentImageNumber = 1;
+                loadImage(1);
             }
 
             // ドラッグ処理
@@ -272,26 +250,26 @@
             function handleDragMove(e) {
                 if (!isDragging || !currentGenreInfo) return;
                 e.preventDefault();
-                
+
                 currentX = e.pageX || e.touches[0].pageX;
                 currentY = e.pageY || e.touches[0].pageY;
-                
+
                 const diffX = currentX - startX;
                 const diffY = currentY - startY;
-                const rotation = diffX / 10;
-                
+                const rotation = diffX / 15;
+
                 imageCard.style.transform = `translateX(${diffX}px) translateY(${diffY}px) rotate(${rotation}deg)`;
-                
+
                 // インジケーター表示
                 if (diffX > 50) {
-                    likeIndicator.style.opacity = Math.min(1, (diffX - 50) / 100);
-                    nopeIndicator.style.opacity = 0;
+                    nextIndicator.style.opacity = Math.min(1, (diffX - 50) / 100);
+                    prevIndicator.style.opacity = 0;
                 } else if (diffX < -50) {
-                    nopeIndicator.style.opacity = Math.min(1, (-diffX - 50) / 100);
-                    likeIndicator.style.opacity = 0;
+                    prevIndicator.style.opacity = Math.min(1, (-diffX - 50) / 100);
+                    nextIndicator.style.opacity = 0;
                 } else {
-                    likeIndicator.style.opacity = 0;
-                    nopeIndicator.style.opacity = 0;
+                    prevIndicator.style.opacity = 0;
+                    nextIndicator.style.opacity = 0;
                 }
             }
 
@@ -299,17 +277,21 @@
                 if (!isDragging || !currentGenreInfo) return;
                 isDragging = false;
                 imageCard.classList.remove('dragging');
-                
+
                 const diffX = currentX - startX;
                 const threshold = 120;
-                
-                if (Math.abs(diffX) > threshold) {
-                    const direction = diffX > 0 ? 'right' : 'left';
-                    animateCard(direction, loadRandomImage);
+
+                if (diffX > threshold) {
+                    // 右スワイプ - 次の問題
+                    animateCard('right', nextImage);
+                } else if (diffX < -threshold) {
+                    // 左スワイプ - 前の問題
+                    animateCard('left', prevImage);
                 } else {
+                    // 元の位置に戻す
                     imageCard.style.transform = 'translateX(0) translateY(0) rotate(0deg)';
-                    likeIndicator.style.opacity = 0;
-                    nopeIndicator.style.opacity = 0;
+                    prevIndicator.style.opacity = 0;
+                    nextIndicator.style.opacity = 0;
                 }
             }
 
@@ -320,23 +302,19 @@
                 option.textContent = genre;
                 genreSelect.appendChild(option);
             });
-
             genreSelect.addEventListener('change', handleGenreChange);
-            
+
+            // 答えを見るボタン
             revealBtn.addEventListener('click', () => {
-                overlay.style.opacity = '0';
-            });
-            
-            likeBtn.addEventListener('click', () => {
-                if (currentGenreInfo) {
-                    animateCard('right', loadRandomImage);
-                }
-            });
-            
-            nopeBtn.addEventListener('click', () => {
-                if (currentGenreInfo) {
-                    animateCard('left', loadRandomImage);
-                }
+                answerOverlay.style.opacity = '0';
+                revealBtn.textContent = '答えを表示中 ✅';
+                revealBtn.disabled = true;
+
+                // 3秒後にボタンを復活
+                setTimeout(() => {
+                    revealBtn.textContent = '答えを見る 👁️';
+                    revealBtn.disabled = false;
+                }, 3000);
             });
 
             // タッチイベント
@@ -344,7 +322,7 @@
             imageCard.addEventListener('mousemove', handleDragMove);
             imageCard.addEventListener('mouseup', handleDragEnd);
             imageCard.addEventListener('mouseleave', handleDragEnd);
-            
+
             imageCard.addEventListener('touchstart', handleDragStart, { passive: true });
             imageCard.addEventListener('touchmove', handleDragMove, { passive: false });
             imageCard.addEventListener('touchend', handleDragEnd);
@@ -357,10 +335,15 @@
                     <h3 class="text-xl font-semibold text-red-500 mb-2">読み込みエラー</h3>
                     <p class="text-gray-500 text-center px-8">
                         画像が見つかりません<br>
-                        パスを確認してください
+                        (${currentImageNumber}/${currentGenreInfo?.count || 0})
                     </p>
                 `;
                 showPlaceholder();
+            };
+
+            // 画像読み込み成功時
+            imageElem.onload = function() {
+                console.log('画像読み込み成功:', currentImageNumber);
             };
 
             // 初期化
