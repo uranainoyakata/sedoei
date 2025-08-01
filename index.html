@@ -6,9 +6,15 @@
     <title>AI Flashcard Learner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: fixed;
+      }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        overscroll-behavior: contain;
+        overscroll-behavior: none;
         -webkit-user-select: none;
         user-select: none;
       }
@@ -56,7 +62,7 @@
             "Cute Cats": { path: "images/cats/", count: 25, extension: "jpeg" },
             "Classic Cars": { path: "images/cars/", count: 18, extension: "jpeg" },
             "Space & Cosmos": { path: "images/space/", count: 22, extension: "jpeg" },
-            "GUCCIかばん": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
+            "歴史": { path: "images/history/", count: 15, extension: "jpeg" },
         };
 
         const getImagePath = (genreInfo, imageNumber) => {
@@ -100,7 +106,7 @@
                             <img src={imageSrc} alt={answerText || "Flashcard image"} className="w-full h-full object-contain" />
                             <div
                                 className={`absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300 ease-in-out ${isAnswerVisible ? 'opacity-0' : 'opacity-100'}`}
-                                style={{ height: '35%' }}
+                                style={{ height: '25%' }}
                             >
                                 <div className="text-center">
                                     <p className="text-white text-lg font-bold">答えは隠されています</p>
@@ -109,7 +115,7 @@
                             </div>
                              <div
                                 className={`absolute bottom-0 left-0 right-0 flex items-center justify-center p-4 transition-opacity duration-300 ease-in-out ${isAnswerVisible ? 'opacity-100' : 'opacity-0'}`}
-                                style={{ height: '35%' }}
+                                style={{ height: '25%' }}
                             >
                                 <p className="text-white text-xl font-bold text-center">{answerText}</p>
                             </div>
@@ -183,6 +189,12 @@
 
             const handleSwipeMove = useCallback((e) => {
                 if (!isSwiping.current) return;
+                
+                // Prevent browser's default scroll/touch behavior
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
+
                 currentX.current = e.touches ? e.touches[0].pageX : e.pageX;
                 const diffX = currentX.current - startX.current;
                 const rotation = diffX / 20;
