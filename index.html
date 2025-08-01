@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,7 @@
             height: 100%;
             cursor: grab;
             will-change: transform;
-            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1 );
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
             transform-style: preserve-3d;
         }
         .card.dragging {
@@ -46,25 +46,20 @@
 </head>
 <body class="bg-black">
     <div id="main-container" class="relative w-screen h-screen max-w-sm mx-auto bg-black overflow-hidden">
-        
         <div id="card-container" class="absolute inset-x-4 inset-y-16 card-stack">
-            <!-- Behind Card -->
             <div id="behind-card" class="card bg-gray-800 rounded-2xl shadow-lg" style="transform: translateY(20px) scale(0.95); z-index: 1;">
-                 <img id="behind-image" src="" class="w-full h-full object-contain rounded-2xl">
+                <img id="behind-image" src="" class="w-full h-full object-contain rounded-2xl">
             </div>
-            <!-- Main Card -->
             <div id="image-card" class="card bg-gray-800 rounded-2xl shadow-xl overflow-hidden" style="z-index: 2;">
                 <div id="no-image-placeholder" class="w-full h-full flex flex-col items-center justify-center text-white p-4">
                     <div class="text-8xl mb-6">📚</div>
                     <h3 class="text-xl font-semibold text-gray-200 mb-2">学習を始めよう!</h3>
                     <p class="text-gray-400 text-center leading-relaxed">
                         右上のメニューからジャンルを選んで  
-暗記カードを開始
+                        暗記カードを開始
                     </p>
                 </div>
-
                 <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-contain hidden">
-
                 <div id="image-cover" class="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4">
                     <div class="text-center">
                         <p class="text-white text-lg font-bold" id="answer-text">答えは隠されています</p>
@@ -76,9 +71,8 @@
 
         <!-- フローティングUI -->
         <div class="absolute top-4 right-4 z-30">
-             <button id="genre-menu-btn" class="w-12 h-12 bg-black/30 backdrop-blur-md text-white rounded-full flex items-center justify-center floating-button text-2xl">☰</button>
+            <button id="genre-menu-btn" class="w-12 h-12 bg-black/30 backdrop-blur-md text-white rounded-full flex items-center justify-center floating-button text-2xl">☰</button>
         </div>
-        
         <div class="absolute bottom-6 right-6 z-30">
             <button id="reveal-btn" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2">
                 <span id="reveal-btn-icon">👁️</span>
@@ -124,6 +118,7 @@
 
             let currentGenreInfo = null;
             let currentImageNumber = 1;
+            let nextImageNumber = 2;
             let isDragging = false;
             let startX = 0, currentX = 0;
             let isAnswerVisible = false;
@@ -139,15 +134,10 @@
                 }
                 hidePlaceholder();
 
-                // Main card
                 imageElem.src = getImagePath(currentGenreInfo, currentImageNumber);
                 answerText.textContent = `${genreSelect.value} #${currentImageNumber}`;
-                
-                // Behind card (next card)
-                const nextImageNumber = (currentImageNumber % currentGenreInfo.count) + 1;
                 behindImage.src = getImagePath(currentGenreInfo, nextImageNumber);
 
-                // Reset state
                 isAnswerVisible = false;
                 imageCover.classList.remove('opacity-0');
                 revealBtnText.textContent = '答えを見る';
@@ -179,6 +169,7 @@
                 }
                 currentGenreInfo = imageData[selectedGenre];
                 currentImageNumber = 1;
+                nextImageNumber = 2;
                 updateCards();
                 genreModal.classList.add('hidden');
             }
@@ -196,7 +187,6 @@
                 currentX = e.pageX || e.touches[0].pageX;
                 const diffX = currentX - startX;
                 const rotation = diffX / 20;
-                
                 imageCard.style.transform = `translateX(${diffX}px) rotate(${rotation}deg)`;
             }
 
@@ -209,28 +199,28 @@
                 const threshold = window.innerWidth / 4;
 
                 if (diffX > threshold) {
-                    // Swipe Right (Previous)
                     imageCard.style.transform = `translateX(${window.innerWidth}px) rotate(30deg)`;
                     currentImageNumber = (currentImageNumber - 2 + currentGenreInfo.count) % currentGenreInfo.count + 1;
+                    nextImageNumber = currentImageNumber % currentGenreInfo.count + 1;
                 } else if (diffX < -threshold) {
-                    // Swipe Left (Next)
                     imageCard.style.transform = `translateX(-${window.innerWidth}px) rotate(-30deg)`;
-                    currentImageNumber = (currentImageNumber % currentGenreInfo.count) + 1;
+                    currentImageNumber = nextImageNumber;
+                    nextImageNumber = (currentImageNumber % currentGenreInfo.count) + 1;
                 } else {
                     imageCard.style.transform = 'translateX(0) rotate(0deg)';
                     return;
                 }
-                
+
                 setTimeout(updateCards, 200);
             }
 
-            // Event Listeners
             Object.keys(imageData).forEach(genre => {
                 const option = document.createElement('option');
                 option.value = genre;
                 option.textContent = genre;
                 genreSelect.appendChild(option);
             });
+
             genreSelect.addEventListener('change', handleGenreChange);
 
             revealBtn.addEventListener('click', () => {
@@ -249,7 +239,7 @@
             imageCard.addEventListener('mousedown', handleDragStart);
             imageCard.addEventListener('mousemove', handleDragMove);
             imageCard.addEventListener('mouseup', handleDragEnd);
-            imageCard.addEventListener('mouseleave', handleDragEnd); // Important for mouse leaving the card
+            imageCard.addEventListener('mouseleave', handleDragEnd);
 
             imageCard.addEventListener('touchstart', handleDragStart, { passive: true });
             imageCard.addEventListener('touchmove', handleDragMove, { passive: false });
@@ -260,6 +250,7 @@
     </script>
 </body>
 </html>
+
 
 
 
