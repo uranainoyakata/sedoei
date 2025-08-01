@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>AI Flashcard Learner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -62,7 +62,7 @@
             "Cute Cats": { path: "images/cats/", count: 25, extension: "jpeg" },
             "Classic Cars": { path: "images/cars/", count: 18, extension: "jpeg" },
             "Space & Cosmos": { path: "images/space/", count: 22, extension: "jpeg" },
-            "GUCCIかばん": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
+            "歴史": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
         };
 
         const getImagePath = (genreInfo, imageNumber) => {
@@ -104,20 +104,17 @@
                     ) : (
                         <>
                             <img src={imageSrc} alt={answerText || "Flashcard image"} className="w-full h-full object-contain" />
-                            <div
-                                className={`absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300 ease-in-out ${isAnswerVisible ? 'opacity-0' : 'opacity-100'}`}
-                                style={{ height: '25%' }}
-                            >
-                                <div className="text-center">
-                                    <p className="text-white text-lg font-bold">答えは隠されています</p>
-                                    <p className="text-gray-300 text-sm">ボタンを押して表示</p>
+                            <div className="absolute bottom-0 left-0 right-0 h-1/4">
+                                <div className="absolute inset-0 bg-black/50 backdrop-blur-md" />
+                                <div className="relative w-full h-full flex items-center justify-center text-center p-4">
+                                    <div className={`transition-opacity duration-300 ${isAnswerVisible ? 'opacity-0' : 'opacity-100'}`}>
+                                        <p className="text-white text-lg font-bold">答えは隠されています</p>
+                                        <p className="text-gray-300 text-sm">ボタンを押して表示</p>
+                                    </div>
+                                    <div className={`absolute inset-0 flex items-center justify-center p-4 transition-opacity duration-300 ${isAnswerVisible ? 'opacity-100' : 'opacity-0'}`}>
+                                        <p className="text-white text-xl font-bold">{answerText}</p>
+                                    </div>
                                 </div>
-                            </div>
-                             <div
-                                className={`absolute bottom-0 left-0 right-0 flex items-center justify-center p-4 transition-opacity duration-300 ease-in-out ${isAnswerVisible ? 'opacity-100' : 'opacity-0'}`}
-                                style={{ height: '25%' }}
-                            >
-                                <p className="text-white text-xl font-bold text-center">{answerText}</p>
                             </div>
                         </>
                     )}
@@ -170,7 +167,7 @@
         };
         
         // --- Hooks ---
-        const useSwipe = (key, { onSwipeLeft, onSwipeRight }) => {
+        const useSwipe = (key, { onSwipeLeft, onSwipeRight, onSwipeMove }) => {
             const [style, setStyle] = useState({});
             const isSwiping = useRef(false);
             const startX = useRef(0);
@@ -187,10 +184,9 @@
                 resetStyle();
             }, [key, resetStyle]);
 
-            const handleSwipeMove = useCallback((e) => {
+            const handleSwipeMoveInternal = useCallback((e) => {
                 if (!isSwiping.current) return;
                 
-                // Prevent browser's default scroll/touch behavior
                 if (e.cancelable) {
                     e.preventDefault();
                 }
@@ -203,22 +199,24 @@
                     transform: `translateX(${diffX}px) rotate(${rotation}deg)`,
                     transition: 'none',
                 });
-            }, []);
+                onSwipeMove?.(diffX);
+            }, [onSwipeMove]);
             
-            const handleSwipeEnd = useCallback(() => {
+            const handleSwipeEndInternal = useCallback(() => {
                 if (!isSwiping.current) return;
                 isSwiping.current = false;
                 
-                document.removeEventListener('mousemove', handleSwipeMove);
-                document.removeEventListener('mouseup', handleSwipeEnd);
-                document.removeEventListener('touchmove', handleSwipeMove);
-                document.removeEventListener('touchend', handleSwipeEnd);
+                document.removeEventListener('mousemove', handleSwipeMoveInternal);
+                document.removeEventListener('mouseup', handleSwipeEndInternal);
+                document.removeEventListener('touchmove', handleSwipeMoveInternal);
+                document.removeEventListener('touchend', handleSwipeEndInternal);
 
                 const diffX = currentX.current - startX.current;
                 const threshold = window.innerWidth / 4;
 
                 if (Math.abs(diffX) < threshold) {
                     resetStyle();
+                    onSwipeMove?.(0);
                     return;
                 }
 
@@ -236,24 +234,24 @@
                     }
                 }, 200);
 
-            }, [handleSwipeMove, onSwipeLeft, onSwipeRight, resetStyle]);
+            }, [handleSwipeMoveInternal, onSwipeLeft, onSwipeRight, resetStyle, onSwipeMove]);
 
-            const handleSwipeStart = useCallback((e) => {
+            const handleSwipeStartInternal = useCallback((e) => {
                 isSwiping.current = true;
                 startX.current = e.touches ? e.touches[0].pageX : e.pageX;
                 currentX.current = startX.current;
 
-                document.addEventListener('mousemove', handleSwipeMove);
-                document.addEventListener('mouseup', handleSwipeEnd);
-                document.addEventListener('touchmove', handleSwipeMove, { passive: false });
-                document.addEventListener('touchend', handleSwipeEnd);
-            }, [handleSwipeMove, handleSwipeEnd]);
+                document.addEventListener('mousemove', handleSwipeMoveInternal);
+                document.addEventListener('mouseup', handleSwipeEndInternal);
+                document.addEventListener('touchmove', handleSwipeMoveInternal, { passive: false });
+                document.addEventListener('touchend', handleSwipeEndInternal);
+            }, [handleSwipeMoveInternal, handleSwipeEndInternal]);
 
             return {
                 style,
                 eventHandlers: {
-                    onMouseDown: handleSwipeStart,
-                    onTouchStart: handleSwipeStart,
+                    onMouseDown: handleSwipeStartInternal,
+                    onTouchStart: handleSwipeStartInternal,
                 },
             };
         };
@@ -264,6 +262,7 @@
             const [currentImageIndex, setCurrentImageIndex] = useState(1);
             const [isAnswerVisible, setIsAnswerVisible] = useState(false);
             const [isModalOpen, setIsModalOpen] = useState(false);
+            const [swipeOffset, setSwipeOffset] = useState(0);
 
             const currentGenreInfo = selectedGenre ? IMAGE_DATA[selectedGenre] : null;
 
@@ -272,18 +271,21 @@
                 const nextIndex = (currentImageIndex % currentGenreInfo.count) + 1;
                 setCurrentImageIndex(nextIndex);
                 setIsAnswerVisible(false);
+                setSwipeOffset(0);
             };
             
             const swipeKey = `${selectedGenre}-${currentImageIndex}`;
             const { style: swipeStyle, eventHandlers } = useSwipe(swipeKey, {
                 onSwipeLeft: handleNextCard,
                 onSwipeRight: handleNextCard,
+                onSwipeMove: setSwipeOffset,
             });
 
             const handleGenreSelect = (genre) => {
                 setSelectedGenre(genre);
                 setCurrentImageIndex(1);
                 setIsAnswerVisible(false);
+                setSwipeOffset(0);
             };
 
             const currentImageSrc = useMemo(() => {
@@ -304,6 +306,19 @@
                  const nextIndex = (currentImageIndex % currentGenreInfo.count) + 1;
                  return `${selectedGenre} #${nextIndex}`;
             },[currentGenreInfo, currentImageIndex, selectedGenre]);
+            
+            const behindCardStyle = useMemo(() => {
+                const isSwiping = swipeOffset !== 0;
+                const swipeProgress = Math.min(Math.abs(swipeOffset) / (window.innerWidth / 4), 1);
+                const scale = 0.95 + (0.05 * swipeProgress);
+                const translateY = 20 - (20 * swipeProgress);
+
+                return {
+                    transform: `translateY(${translateY}px) scale(${scale})`,
+                    transition: isSwiping ? 'none' : 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    zIndex: 1
+                };
+            }, [swipeOffset]);
 
 
             return (
@@ -316,7 +331,7 @@
                                 imageSrc={nextImageSrc}
                                 answerText={nextAnswerText}
                                 isAnswerVisible={false}
-                                style={{ transform: 'translateY(20px) scale(0.95)', zIndex: 1 }}
+                                style={behindCardStyle}
                             />
                         )}
                         
@@ -343,7 +358,7 @@
                         </button>
                     </div>
 
-                    <div className="absolute bottom-6 right-6 z-30">
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-center z-30" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
                         <button
                             id="reveal-btn"
                             onClick={() => setIsAnswerVisible(v => !v)}
