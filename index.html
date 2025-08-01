@@ -62,7 +62,7 @@
             "Cute Cats": { path: "images/cats/", count: 25, extension: "jpeg" },
             "Classic Cars": { path: "images/cars/", count: 18, extension: "jpeg" },
             "Space & Cosmos": { path: "images/space/", count: 22, extension: "jpeg" },
-            "歴史": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
+            "歴史": { path: "images/history/", count: 15, extension: "jpeg" },
         };
 
         const getImagePath = (genreInfo, imageNumber) => {
@@ -78,7 +78,6 @@
 
         const Flashcard = ({
             imageSrc,
-            answerText,
             isAnswerVisible,
             isPlaceholder,
             style,
@@ -103,16 +102,15 @@
                         </div>
                     ) : (
                         <>
-                            <img src={imageSrc} alt={answerText || "Flashcard image"} className="w-full h-full object-contain" />
-                            <div className="absolute bottom-0 left-0 right-0 h-1/4">
+                            <img src={imageSrc} alt="Flashcard image" className="w-full h-full object-contain" />
+                            <div 
+                                className={`absolute bottom-0 left-0 right-0 h-1/4 transition-opacity duration-300 pointer-events-none ${isAnswerVisible ? 'opacity-0' : 'opacity-100'}`}
+                            >
                                 <div className="absolute inset-0 bg-black/50 backdrop-blur-md" />
                                 <div className="relative w-full h-full flex items-center justify-center text-center p-4">
-                                    <div className={`transition-opacity duration-300 ${isAnswerVisible ? 'opacity-0' : 'opacity-100'}`}>
-                                        <p className="text-white text-lg font-bold">答えは隠されています</p>
-                                        <p className="text-gray-300 text-sm">ボタンを押して表示</p>
-                                    </div>
-                                    <div className={`absolute inset-0 flex items-center justify-center p-4 transition-opacity duration-300 ${isAnswerVisible ? 'opacity-100' : 'opacity-0'}`}>
-                                        <p className="text-white text-xl font-bold">{answerText}</p>
+                                    <div>
+                                        <p className="text-white text-lg font-bold"></p>
+                                        <p className="text-gray-300 text-sm"></p>
                                     </div>
                                 </div>
                             </div>
@@ -299,14 +297,6 @@
                 return getImagePath(currentGenreInfo, nextIndex);
             }, [currentGenreInfo, currentImageIndex]);
 
-            const answerText = selectedGenre ? `${selectedGenre} #${currentImageIndex}` : '';
-            
-            const nextAnswerText = useMemo(() => {
-                 if (!currentGenreInfo) return '';
-                 const nextIndex = (currentImageIndex % currentGenreInfo.count) + 1;
-                 return `${selectedGenre} #${nextIndex}`;
-            },[currentGenreInfo, currentImageIndex, selectedGenre]);
-            
             const behindCardStyle = useMemo(() => {
                 const isSwiping = swipeOffset !== 0;
                 const swipeProgress = Math.min(Math.abs(swipeOffset) / (window.innerWidth / 4), 1);
@@ -329,7 +319,6 @@
                              <Flashcard
                                 isPlaceholder={false}
                                 imageSrc={nextImageSrc}
-                                answerText={nextAnswerText}
                                 isAnswerVisible={false}
                                 style={behindCardStyle}
                             />
@@ -339,7 +328,6 @@
                         <Flashcard
                             isPlaceholder={!selectedGenre}
                             imageSrc={currentImageSrc}
-                            answerText={answerText}
                             isAnswerVisible={isAnswerVisible}
                             style={swipeStyle}
                             zIndex={2}
@@ -366,7 +354,7 @@
                             className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             <span>{isAnswerVisible ? '✅' : '👁️'}</span>
-                            <span>{isAnswerVisible ? '隠す' : '答えを見る'}</span>
+                            <span>{isAnswerVisible ? '隠す' : '見る'}</span>
                         </button>
                     </div>
 
