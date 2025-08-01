@@ -2,8 +2,8 @@
 // ルール: 写真のファイル名は「1.jpg」「2.jpg」のように連番にしてください。
 
 const imageData = {
-    "歴史": {
-        path: "images/history/", // 写真が入っているフォルダの場所
+    "GUCCIかばん": {
+        path: "images/gushikaban", // 写真が入っているフォルダの場所
         count: 2,               // フォルダに入っている写真の「枚数」
         extension: "jpg"        // 写真の拡張子 (jpg, pngなど)
     },
