@@ -3,9 +3,9 @@
 
 const imageData = {
     "GUCCIかばん": {
-        path: "images/gushikaban", // 写真が入っているフォルダの場所
-        count: 51,               // フォルダに入っている写真の「枚数」
-        extension: "jpg"        // 写真の拡張子 (jpg, pngなど)
+        path: "images/gushikaban/", // 写真が入っているフォルダの場所
+        count: 56,               // フォルダに入っている写真の「枚数」
+        extension: "jpeg"        // 写真の拡張子 (jpg, pngなど)
     },
     "科学": {
         path: "images/science/",
