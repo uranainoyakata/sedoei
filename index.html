@@ -72,11 +72,11 @@
             </select>
         </div>
 
-        <div class="flex-1 relative overflow-hidden px-4 py-6 card-stack">
+        <div class="flex-1 relative flex items-center overflow-hidden px-4 py-6 card-stack">
             <div class="absolute inset-4 bg-gray-100 rounded-3xl opacity-30"></div>
             <div class="absolute inset-4 bg-gray-200 rounded-3xl opacity-20 transform scale-95"></div>
 
-            <div id="card-container" class="relative w-full h-full">
+            <div id="card-container" class="relative w-full aspect-[9/16]">
                 <div id="image-card" class="absolute inset-0 bg-white rounded-3xl card-shadow card overflow-hidden cursor-grab active:cursor-grabbing">
 
                     <div id="prev-indicator" class="absolute top-8 left-8 px-4 py-2 text-white font-bold text-lg prev-indicator rounded-lg opacity-0 z-20">
@@ -95,7 +95,7 @@
                         </p>
                     </div>
 
-                    <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-contain hidden">
+                    <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-cover hidden">
 
                     <div id="answer-overlay" class="absolute left-0 right-0 answer-overlay opacity-0 transition-opacity duration-300">
                         <div class="absolute bottom-4 left-4 right-4 text-center">
@@ -130,7 +130,7 @@
                 "GUCCIかばん": {
                     path: "images/gushikaban/",
                     count: 56,
-                    extension: "jpg"
+                    extension: "jpeg"
                 },
                 "科学": {
                     path: "images/science/",
