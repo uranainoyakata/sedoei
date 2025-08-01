@@ -15,12 +15,9 @@
             -webkit-user-select: none;
             user-select: none;
         }
-        .card-stack {
-            perspective: 1000px;
-        }
         .card {
             transform-style: preserve-3d;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275 );
         }
         .card.dragging {
             transition: none;
@@ -34,8 +31,6 @@
                 rgba(0,0,0,0.7) 30%,
                 rgba(0,0,0,0.3) 70%,
                transparent 100%);
-            height: 16.666667%; /* 6分の1 */
-            bottom: 0;
         }
         .prev-indicator {
             background: linear-gradient(45deg, #3b82f6, #1d4ed8);
@@ -54,74 +49,69 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-100 via-purple-50 to-green-100 min-h-screen overflow-hidden">
-    <div class="flex flex-col h-screen max-w-sm mx-auto bg-white">
-        <header class="bg-white shadow-sm px-6 py-4 flex-shrink-0">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-xl font-bold text-gray-800">暗記カード</h1>
-                    <p class="text-xs text-gray-500">スワイプで問題を切り替え</p>
+<body class="bg-black">
+    <div id="main-container" class="relative w-screen h-screen max-w-sm mx-auto bg-black">
+        
+        <div id="card-container" class="absolute inset-0">
+            <div id="image-card" class="w-full h-full bg-gray-800 card overflow-hidden cursor-grab active:cursor-grabbing">
+
+                <div id="prev-indicator" class="absolute top-8 left-8 px-4 py-2 text-white font-bold text-lg prev-indicator rounded-lg opacity-0 z-20">
+                    ← 前の問題
                 </div>
-                <div class="text-2xl">🧠</div>
-            </div>
-        </header>
+                <div id="next-indicator" class="absolute top-8 right-8 px-4 py-2 text-white font-bold text-lg next-indicator rounded-lg opacity-0 z-20">
+                    次の問題 →
+                </div>
 
-        <div class="px-6 py-3 bg-gray-50 flex-shrink-0">
-            <select id="genre-select" class="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                <option value="">ジャンルを選択 ✨</option>
-            </select>
-        </div>
+                <div id="no-image-placeholder" class="w-full h-full flex flex-col items-center justify-center text-white">
+                    <div class="text-8xl mb-6">📚</div>
+                    <h3 class="text-xl font-semibold text-gray-200 mb-2">学習を始めよう!</h3>
+                    <p class="text-gray-400 text-center px-8 leading-relaxed">
+                        右上のメニューからジャンルを選んで  
 
-        <div class="flex-1 relative flex items-center overflow-hidden px-4 py-6 card-stack">
-            <div class="absolute inset-4 bg-gray-100 rounded-3xl opacity-30"></div>
-            <div class="absolute inset-4 bg-gray-200 rounded-3xl opacity-20 transform scale-95"></div>
+                        暗記カードを開始
+                    </p>
+                </div>
 
-            <div id="card-container" class="relative w-full aspect-[9/16]">
-                <div id="image-card" class="absolute inset-0 bg-white rounded-3xl card-shadow card overflow-hidden cursor-grab active:cursor-grabbing">
+                <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-contain hidden">
 
-                    <div id="prev-indicator" class="absolute top-8 left-8 px-4 py-2 text-white font-bold text-lg prev-indicator rounded-lg opacity-0 z-20">
-                        ← 前の問題
-                    </div>
-                    <div id="next-indicator" class="absolute top-8 right-8 px-4 py-2 text-white font-bold text-lg next-indicator rounded-lg opacity-0 z-20">
-                        次の問題 →
-                    </div>
-
-                    <div id="no-image-placeholder" class="w-full h-full flex flex-col items-center justify-center">
-                        <div class="text-8xl mb-6">📚</div>
-                        <h3 class="text-xl font-semibold text-gray-700 mb-2">学習を始めよう!</h3>
-                        <p class="text-gray-500 text-center px-8 leading-relaxed">
-                            上からジャンルを選んで<br>
-                            画像暗記カードを開始
-                        </p>
-                    </div>
-
-                    <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-cover hidden">
-
-                    <div id="answer-overlay" class="absolute left-0 right-0 answer-overlay opacity-0 transition-opacity duration-300">
-                        <div class="absolute bottom-4 left-4 right-4 text-center">
-                            <div class="bg-black/20 backdrop-blur-sm rounded-lg p-3">
-                                <p class="text-white text-sm font-medium">🔒 答えが隠されています</p>
-                                <p class="text-gray-200 text-xs mt-1">下のボタンをタップして表示</p>
-                            </div>
+                <div id="answer-overlay" class="absolute inset-0 answer-overlay opacity-0 transition-opacity duration-300 flex items-end justify-center p-4">
+                     <div class="text-center w-full">
+                        <div class="bg-black/30 backdrop-blur-md rounded-xl p-4">
+                            <p class="text-white text-lg font-bold" id="answer-text">答え</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="flex-shrink-0 px-6 pb-8 pt-4">
-            <div class="flex items-center justify-center">
-                <button id="reveal-btn" class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-4 px-6 rounded-2xl floating-button disabled:opacity-30" disabled>
-                    答えを見る 👁️
-                </button>
-            </div>
+        <!-- フローティングUI -->
+        <div class="absolute top-4 right-4 z-30">
+             <button id="genre-menu-btn" class="w-12 h-12 bg-black/30 backdrop-blur-md text-white rounded-full flex items-center justify-center floating-button text-2xl">☰</button>
+        </div>
+        
+        <div class="absolute bottom-6 right-6 z-30">
+            <button id="reveal-btn" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2" disabled>
+                <span id="reveal-btn-icon">👁️</span>
+                <span id="reveal-btn-text">答えを見る</span>
+            </button>
+        </div>
 
-            <div class="text-center mt-4 space-y-2">
-                <p class="text-sm text-gray-600">スワイプで操作</p>
-                <p class="text-xs text-gray-400">← 前の問題 | 次の問題 →</p>
-            </div>
+    </div>
+
+    <!-- ジャンル選択モーダル -->
+    <div id="genre-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-8 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-1">ジャンル選択</h2>
+            <p class="text-sm text-gray-500 mb-6">学習したいジャンルを選んでください。</p>
+            <select id="genre-select" class="w-full p-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <option value="">ジャンルを選択 ✨</option>
+            </select>
+            <button id="close-modal-btn" class="mt-6 w-full bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl">
+                閉じる
+            </button>
         </div>
     </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -149,10 +139,17 @@
             const imageCard = document.getElementById('image-card');
             const imageElem = document.getElementById('image');
             const answerOverlay = document.getElementById('answer-overlay');
+            const answerText = document.getElementById('answer-text');
             const revealBtn = document.getElementById('reveal-btn');
+            const revealBtnText = document.getElementById('reveal-btn-text');
+            const revealBtnIcon = document.getElementById('reveal-btn-icon');
             const placeholder = document.getElementById('no-image-placeholder');
             const prevIndicator = document.getElementById('prev-indicator');
             const nextIndicator = document.getElementById('next-indicator');
+            const genreMenuBtn = document.getElementById('genre-menu-btn');
+            const genreModal = document.getElementById('genre-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+
 
             let currentGenreInfo = null;
             let currentImageNumber = 1;
@@ -180,52 +177,48 @@
                     return;
                 }
 
-                // 画像番号を範囲内に調整
                 if (imageNumber < 1) imageNumber = currentGenreInfo.count;
                 if (imageNumber > currentGenreInfo.count) imageNumber = 1;
 
                 currentImageNumber = imageNumber;
                 const imagePath = `${currentGenreInfo.path}${imageNumber}.${currentGenreInfo.extension}`;
-
-                console.log('画像を読み込み中:', imagePath, `(${currentImageNumber}/${currentGenreInfo.count})`);
+                
+                answerText.textContent = `${genreSelect.value} #${imageNumber}`;
 
                 imageElem.src = imagePath;
                 hidePlaceholder();
 
-                // 答えを隠す
-                answerOverlay.style.opacity = '1';
+                answerOverlay.style.opacity = '0';
+                revealBtnText.textContent = '答えを見る';
+                revealBtnIcon.textContent = '👁️';
+                revealBtn.disabled = false;
 
-                // インジケーターリセット
                 prevIndicator.style.opacity = '0';
                 nextIndicator.style.opacity = '0';
             }
 
-            // 次の画像
             function nextImage() {
                 loadImage(currentImageNumber + 1);
             }
 
-            // 前の画像
             function prevImage() {
                 loadImage(currentImageNumber - 1);
             }
 
-            // カードアニメーション
             function animateCard(direction, callback) {
                 const rotation = direction === 'right' ? 20 : -20;
-                const translateX = direction === 'right' ? 400 : -400;
+                const translateX = direction === 'right' ? window.innerWidth : -window.innerWidth;
 
                 imageCard.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                imageCard.style.transform = `translateX(${translateX}px) rotate(${rotation}deg) scale(0.9)`;
+                imageCard.style.transform = `translateX(${translateX}px) rotate(${rotation}deg) scale(0.8)`;
 
                 setTimeout(() => {
-                    imageCard.style.transition = 'transform 0.3s ease';
+                    imageCard.style.transition = 'none';
                     imageCard.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
                     if (callback) callback();
                 }, 400);
             }
 
-            // ジャンル変更
             function handleGenreChange() {
                 const selectedGenre = genreSelect.value;
                 if (!selectedGenre) {
@@ -236,15 +229,16 @@
                 currentGenreInfo = imageData[selectedGenre] || null;
                 currentImageNumber = 1;
                 loadImage(1);
+                genreModal.classList.add('hidden');
             }
 
-            // ドラッグ処理
             function handleDragStart(e) {
                 if (!currentGenreInfo) return;
                 isDragging = true;
                 startX = e.pageX || e.touches[0].pageX;
                 startY = e.pageY || e.touches[0].pageY;
                 imageCard.classList.add('dragging');
+                imageCard.style.transition = 'none';
             }
 
             function handleDragMove(e) {
@@ -256,16 +250,16 @@
 
                 const diffX = currentX - startX;
                 const diffY = currentY - startY;
-                const rotation = diffX / 15;
+                const rotation = diffX / 20;
 
                 imageCard.style.transform = `translateX(${diffX}px) translateY(${diffY}px) rotate(${rotation}deg)`;
 
-                // インジケーター表示
+                const opacity = Math.min(1, Math.abs(diffX - 50) / 100);
                 if (diffX > 50) {
-                    nextIndicator.style.opacity = Math.min(1, (diffX - 50) / 100);
+                    nextIndicator.style.opacity = opacity;
                     prevIndicator.style.opacity = 0;
                 } else if (diffX < -50) {
-                    prevIndicator.style.opacity = Math.min(1, (-diffX - 50) / 100);
+                    prevIndicator.style.opacity = opacity;
                     nextIndicator.style.opacity = 0;
                 } else {
                     prevIndicator.style.opacity = 0;
@@ -277,18 +271,16 @@
                 if (!isDragging || !currentGenreInfo) return;
                 isDragging = false;
                 imageCard.classList.remove('dragging');
+                imageCard.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
 
                 const diffX = currentX - startX;
-                const threshold = 120;
+                const threshold = window.innerWidth / 3.5;
 
                 if (diffX > threshold) {
-                    // 右スワイプ - 次の問題
                     animateCard('right', nextImage);
                 } else if (diffX < -threshold) {
-                    // 左スワイプ - 前の問題
                     animateCard('left', prevImage);
                 } else {
-                    // 元の位置に戻す
                     imageCard.style.transform = 'translateX(0) translateY(0) rotate(0deg)';
                     prevIndicator.style.opacity = 0;
                     nextIndicator.style.opacity = 0;
@@ -304,51 +296,52 @@
             });
             genreSelect.addEventListener('change', handleGenreChange);
 
-            // 答えを見るボタン
             revealBtn.addEventListener('click', () => {
-                answerOverlay.style.opacity = '0';
-                revealBtn.textContent = '答えを表示中 ✅';
-                revealBtn.disabled = true;
+                if (answerOverlay.style.opacity === '1') {
+                    answerOverlay.style.opacity = '0';
+                    revealBtnText.textContent = '答えを見る';
+                    revealBtnIcon.textContent = '👁️';
+                } else {
+                    answerOverlay.style.opacity = '1';
+                    revealBtnText.textContent = '隠す';
+                    revealBtnIcon.textContent = '✅';
+                }
+            });
 
-                // 3秒後にボタンを復活
-                setTimeout(() => {
-                    revealBtn.textContent = '答えを見る 👁️';
-                    revealBtn.disabled = false;
-                }, 3000);
+            // モーダル操作
+            genreMenuBtn.addEventListener('click', () => genreModal.classList.remove('hidden'));
+            closeModalBtn.addEventListener('click', () => genreModal.classList.add('hidden'));
+            genreModal.addEventListener('click', (e) => {
+                if (e.target === genreModal) {
+                    genreModal.classList.add('hidden');
+                }
             });
 
             // タッチイベント
             imageCard.addEventListener('mousedown', handleDragStart);
-            imageCard.addEventListener('mousemove', handleDragMove);
-            imageCard.addEventListener('mouseup', handleDragEnd);
-            imageCard.addEventListener('mouseleave', handleDragEnd);
-
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('mouseup', handleDragEnd);
+            
             imageCard.addEventListener('touchstart', handleDragStart, { passive: true });
-            imageCard.addEventListener('touchmove', handleDragMove, { passive: false });
-            imageCard.addEventListener('touchend', handleDragEnd);
+            document.addEventListener('touchmove', handleDragMove, { passive: false });
+            document.addEventListener('touchend', handleDragEnd);
 
-            // 画像エラーハンドリング
             imageElem.onerror = function() {
-                console.error('画像読み込みエラー:', this.src);
                 placeholder.innerHTML = `
                     <div class="text-8xl mb-6">❌</div>
-                    <h3 class="text-xl font-semibold text-red-500 mb-2">読み込みエラー</h3>
-                    <p class="text-gray-500 text-center px-8">
-                        画像が見つかりません<br>
+                    <h3 class="text-xl font-semibold text-red-400 mb-2">読み込みエラー</h3>
+                    <p class="text-gray-400 text-center px-8">
+                        画像が見つかりません  
+
                         (${currentImageNumber}/${currentGenreInfo?.count || 0})
                     </p>
                 `;
                 showPlaceholder();
             };
 
-            // 画像読み込み成功時
-            imageElem.onload = function() {
-                console.log('画像読み込み成功:', currentImageNumber);
-            };
-
-            // 初期化
             showPlaceholder();
         });
     </script>
 </body>
 </html>
+
