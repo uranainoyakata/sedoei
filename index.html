@@ -1,252 +1,366 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>画像暗記カード</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>AI Flashcard Learner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior: contain;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        .card-stack {
-            perspective: 2000px;
-        }
-        .card {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            cursor: grab;
-            will-change: transform;
-            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-            transform-style: preserve-3d;
-        }
-        .card.dragging {
-            transition: none;
-        }
-        .floating-button {
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            transition: all 0.2s ease;
-        }
-        .floating-button:active {
-            transform: scale(0.95);
-        }
-        #image-cover {
-            height: 25%;
-            transition: opacity 0.3s ease-in-out;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        overscroll-behavior: contain;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .card-stack {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        perspective: 1000px;
+      }
+      .card {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        will-change: transform;
+        backface-visibility: hidden;
+        cursor: grab;
+      }
+      .floating-button {
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          transition: transform 0.2s ease-in-out;
+      }
+      .floating-button:hover {
+          transform: scale(1.05);
+      }
+      .floating-button:active {
+          transform: scale(0.98);
+      }
     </style>
+    <!-- React Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX Transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body class="bg-black">
-    <div id="main-container" class="relative w-screen h-screen max-w-sm mx-auto bg-black overflow-hidden">
-        <div id="card-container" class="absolute inset-x-4 inset-y-16 card-stack">
-            <div id="behind-card" class="card bg-gray-800 rounded-2xl shadow-lg" style="transform: translateY(20px) scale(0.95); z-index: 1;">
-                <img id="behind-image" src="" class="w-full h-full object-contain rounded-2xl">
-            </div>
-            <div id="image-card" class="card bg-gray-800 rounded-2xl shadow-xl overflow-hidden" style="z-index: 2;">
-                <div id="no-image-placeholder" class="w-full h-full flex flex-col items-center justify-center text-white p-4">
-                    <div class="text-8xl mb-6">📚</div>
-                    <h3 class="text-xl font-semibold text-gray-200 mb-2">学習を始めよう!</h3>
-                    <p class="text-gray-400 text-center leading-relaxed">
-                        右上のメニューからジャンルを選んで  
-                        暗記カードを開始
-                    </p>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useRef, useEffect, useCallback } = React;
+
+        // --- Constants ---
+        const IMAGE_DATA = {
+            "Architecture": { path: "images/architecture/", count: 20, extension: "jpeg" },
+            "Nature Landscapes": { path: "images/nature/", count: 30, extension: "jpeg" },
+            "Cute Cats": { path: "images/cats/", count: 25, extension: "jpeg" },
+            "Classic Cars": { path: "images/cars/", count: 18, extension: "jpeg" },
+            "Space & Cosmos": { path: "images/space/", count: 22, extension: "jpeg" },
+            "GUCCIかばん": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
+        };
+
+        const getImagePath = (genreInfo, imageNumber) => {
+            return `${genreInfo.path}${imageNumber}.${genreInfo.extension}`;
+        };
+
+        // --- Components ---
+        const MenuIcon = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        );
+
+        const Flashcard = ({
+            imageSrc,
+            answerText,
+            isAnswerVisible,
+            isPlaceholder,
+            style,
+            zIndex,
+            eventHandlers,
+        }) => {
+            return (
+                <div
+                    className="card bg-gray-800 rounded-2xl shadow-xl overflow-hidden"
+                    style={{ ...style, zIndex }}
+                    {...eventHandlers}
+                >
+                    {isPlaceholder ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-white p-4">
+                            <div className="text-8xl mb-6">📚</div>
+                            <h3 className="text-xl font-semibold text-gray-200 mb-2">学習を始めよう!</h3>
+                            <p className="text-gray-400 text-center leading-relaxed">
+                                右上のメニューからジャンルを選んで
+                                <br />
+                                暗記カードを開始
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            <img src={imageSrc} alt={answerText || "Flashcard image"} className="w-full h-full object-contain" />
+                            <div
+                                className={`absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300 ease-in-out ${isAnswerVisible ? 'opacity-0' : 'opacity-100'}`}
+                                style={{ height: '25%' }}
+                            >
+                                <div className="text-center">
+                                    <p className="text-white text-lg font-bold">答えは隠されています</p>
+                                    <p className="text-gray-300 text-sm">ボタンを押して表示</p>
+                                </div>
+                            </div>
+                             <div
+                                className={`absolute bottom-0 left-0 right-0 flex items-center justify-center p-4 transition-opacity duration-300 ease-in-out ${isAnswerVisible ? 'opacity-100' : 'opacity-0'}`}
+                                style={{ height: '25%' }}
+                            >
+                                <p className="text-white text-xl font-bold text-center">{answerText}</p>
+                            </div>
+                        </>
+                    )}
                 </div>
-                <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-contain hidden">
-                <div id="image-cover" class="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4">
-                    <div class="text-center">
-                        <p class="text-white text-lg font-bold" id="answer-text">答えは隠されています</p>
-                        <p class="text-gray-300 text-sm">ボタンを押して表示</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            );
+        };
 
-        <!-- フローティングUI -->
-        <div class="absolute top-4 right-4 z-30">
-            <button id="genre-menu-btn" class="w-12 h-12 bg-black/30 backdrop-blur-md text-white rounded-full flex items-center justify-center floating-button text-2xl">☰</button>
-        </div>
-        <div class="absolute bottom-6 right-6 z-30">
-            <button id="reveal-btn" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2">
-                <span id="reveal-btn-icon">👁️</span>
-                <span id="reveal-btn-text">答えを見る</span>
-            </button>
-        </div>
-    </div>
+        const GenreModal = ({ isOpen, onClose, onGenreSelect, genres }) => {
+            if (!isOpen) {
+                return null;
+            }
 
-    <!-- ジャンル選択モーダル -->
-    <div id="genre-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-8 z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-1">ジャンル選択</h2>
-            <p class="text-sm text-gray-500 mb-6">学習したいジャンルを選んでください。</p>
-            <select id="genre-select" class="w-full p-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                <option value="">ジャンルを選択 ✨</option>
-            </select>
-            <button id="close-modal-btn" class="mt-6 w-full bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl">閉じる</button>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const imageData = {
-                "GUCCIかばん": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
-                "科学": { path: "images/science/", count: 2, extension: "png" },
-                "美術": { path: "images/art/", count: 2, extension: "jpg" }
+            const handleSelectChange = (e) => {
+                if (e.target.value) {
+                    onGenreSelect(e.target.value);
+                    onClose();
+                }
             };
 
-            const genreSelect = document.getElementById('genre-select');
-            const imageCard = document.getElementById('image-card');
-            const imageElem = document.getElementById('image');
-            const imageCover = document.getElementById('image-cover');
-            const answerText = document.getElementById('answer-text');
-            const revealBtn = document.getElementById('reveal-btn');
-            const revealBtnText = document.getElementById('reveal-btn-text');
-            const revealBtnIcon = document.getElementById('reveal-btn-icon');
-            const placeholder = document.getElementById('no-image-placeholder');
-            const genreMenuBtn = document.getElementById('genre-menu-btn');
-            const genreModal = document.getElementById('genre-modal');
-            const closeModalBtn = document.getElementById('close-modal-btn');
-            const behindCard = document.getElementById('behind-card');
-            const behindImage = document.getElementById('behind-image');
+            return (
+                <div 
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-8 z-50 transition-opacity duration-300"
+                    onClick={onClose}
+                >
+                    <div 
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 className="text-xl font-bold text-gray-800 mb-1">ジャンル選択</h2>
+                        <p className="text-sm text-gray-500 mb-6">学習したいジャンルを選んでください。</p>
+                        <select 
+                            onChange={handleSelectChange}
+                            defaultValue=""
+                            className="w-full p-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        >
+                            <option value="" disabled>ジャンルを選択 ✨</option>
+                            {Object.keys(genres).map((genreName) => (
+                                <option key={genreName} value={genreName}>{genreName}</option>
+                            ))}
+                        </select>
+                        <button 
+                            onClick={onClose}
+                            className="mt-6 w-full bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl transition hover:bg-gray-300"
+                        >
+                            閉じる
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+        
+        // --- Hooks ---
+        const useSwipe = (key, { onSwipeLeft, onSwipeRight }) => {
+            const [style, setStyle] = useState({});
+            const isSwiping = useRef(false);
+            const startX = useRef(0);
+            const currentX = useRef(0);
 
-            let currentGenreInfo = null;
-            let currentImageNumber = 1;
-            let nextImageNumber = 2;
-            let isDragging = false;
-            let startX = 0, currentX = 0;
-            let isAnswerVisible = false;
+            const resetStyle = useCallback(() => {
+                setStyle({
+                    transform: 'translateX(0px) rotate(0deg)',
+                    transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                });
+            }, []);
+            
+            useEffect(() => {
+                resetStyle();
+            }, [key, resetStyle]);
 
-            function getImagePath(genreInfo, imageNumber) {
-                return `${genreInfo.path}${imageNumber}.${genreInfo.extension}`;
-            }
-
-            function updateCards() {
-                if (!currentGenreInfo) {
-                    showPlaceholder();
-                    return;
-                }
-                hidePlaceholder();
-
-                imageElem.src = getImagePath(currentGenreInfo, currentImageNumber);
-                answerText.textContent = `${genreSelect.value} #${currentImageNumber}`;
-                behindImage.src = getImagePath(currentGenreInfo, nextImageNumber);
-
-                isAnswerVisible = false;
-                imageCover.classList.remove('opacity-0');
-                revealBtnText.textContent = '答えを見る';
-                revealBtnIcon.textContent = '👁️';
-                imageCard.style.transform = 'translateX(0) rotate(0deg)';
-            }
-
-            function showPlaceholder() {
-                placeholder.classList.remove('hidden');
-                imageElem.classList.add('hidden');
-                imageCover.classList.add('opacity-0');
-                behindCard.classList.add('hidden');
-                revealBtn.disabled = true;
-            }
-
-            function hidePlaceholder() {
-                placeholder.classList.add('hidden');
-                imageElem.classList.remove('hidden');
-                behindCard.classList.remove('hidden');
-                revealBtn.disabled = false;
-            }
-
-            function handleGenreChange() {
-                const selectedGenre = genreSelect.value;
-                if (!selectedGenre) {
-                    currentGenreInfo = null;
-                    showPlaceholder();
-                    return;
-                }
-                currentGenreInfo = imageData[selectedGenre];
-                currentImageNumber = 1;
-                nextImageNumber = 2;
-                updateCards();
-                genreModal.classList.add('hidden');
-            }
-
-            function handleDragStart(e) {
-                if (!currentGenreInfo || e.target === revealBtn || revealBtn.contains(e.target)) return;
-                isDragging = true;
-                startX = e.pageX || e.touches[0].pageX;
-                imageCard.classList.add('dragging');
-            }
-
-            function handleDragMove(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                currentX = e.pageX || e.touches[0].pageX;
-                const diffX = currentX - startX;
+            const handleSwipeMove = useCallback((e) => {
+                if (!isSwiping.current) return;
+                currentX.current = e.touches ? e.touches[0].pageX : e.pageX;
+                const diffX = currentX.current - startX.current;
                 const rotation = diffX / 20;
-                imageCard.style.transform = `translateX(${diffX}px) rotate(${rotation}deg)`;
-            }
 
-            function handleDragEnd() {
-                if (!isDragging) return;
-                isDragging = false;
-                imageCard.classList.remove('dragging');
+                setStyle({
+                    transform: `translateX(${diffX}px) rotate(${rotation}deg)`,
+                    transition: 'none',
+                });
+            }, []);
+            
+            const handleSwipeEnd = useCallback(() => {
+                if (!isSwiping.current) return;
+                isSwiping.current = false;
+                
+                document.removeEventListener('mousemove', handleSwipeMove);
+                document.removeEventListener('mouseup', handleSwipeEnd);
+                document.removeEventListener('touchmove', handleSwipeMove);
+                document.removeEventListener('touchend', handleSwipeEnd);
 
-                const diffX = currentX - startX;
+                const diffX = currentX.current - startX.current;
                 const threshold = window.innerWidth / 4;
 
-                if (diffX > threshold) {
-                    imageCard.style.transform = `translateX(${window.innerWidth}px) rotate(30deg)`;
-                    currentImageNumber = (currentImageNumber - 2 + currentGenreInfo.count) % currentGenreInfo.count + 1;
-                    nextImageNumber = currentImageNumber % currentGenreInfo.count + 1;
-                } else if (diffX < -threshold) {
-                    imageCard.style.transform = `translateX(-${window.innerWidth}px) rotate(-30deg)`;
-                    currentImageNumber = nextImageNumber;
-                    nextImageNumber = (currentImageNumber % currentGenreInfo.count) + 1;
-                } else {
-                    imageCard.style.transform = 'translateX(0) rotate(0deg)';
+                if (Math.abs(diffX) < threshold) {
+                    resetStyle();
                     return;
                 }
 
-                setTimeout(updateCards, 200);
-            }
+                const flyOutDirection = diffX > 0 ? 1 : -1;
+                setStyle({
+                    transform: `translateX(${flyOutDirection * window.innerWidth}px) rotate(${flyOutDirection * 30}deg)`,
+                    transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                });
+                
+                setTimeout(() => {
+                    if (flyOutDirection < 0) {
+                        onSwipeLeft();
+                    } else {
+                        onSwipeRight();
+                    }
+                }, 200);
 
-            Object.keys(imageData).forEach(genre => {
-                const option = document.createElement('option');
-                option.value = genre;
-                option.textContent = genre;
-                genreSelect.appendChild(option);
+            }, [handleSwipeMove, onSwipeLeft, onSwipeRight, resetStyle]);
+
+            const handleSwipeStart = useCallback((e) => {
+                isSwiping.current = true;
+                startX.current = e.touches ? e.touches[0].pageX : e.pageX;
+                currentX.current = startX.current;
+
+                document.addEventListener('mousemove', handleSwipeMove);
+                document.addEventListener('mouseup', handleSwipeEnd);
+                document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+                document.addEventListener('touchend', handleSwipeEnd);
+            }, [handleSwipeMove, handleSwipeEnd]);
+
+            return {
+                style,
+                eventHandlers: {
+                    onMouseDown: handleSwipeStart,
+                    onTouchStart: handleSwipeStart,
+                },
+            };
+        };
+
+        // --- Main App Component ---
+        function App() {
+            const [selectedGenre, setSelectedGenre] = useState(null);
+            const [currentImageIndex, setCurrentImageIndex] = useState(1);
+            const [isAnswerVisible, setIsAnswerVisible] = useState(false);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+
+            const currentGenreInfo = selectedGenre ? IMAGE_DATA[selectedGenre] : null;
+
+            const handleNextCard = () => {
+                if (!currentGenreInfo) return;
+                const nextIndex = (currentImageIndex % currentGenreInfo.count) + 1;
+                setCurrentImageIndex(nextIndex);
+                setIsAnswerVisible(false);
+            };
+            
+            const swipeKey = `${selectedGenre}-${currentImageIndex}`;
+            const { style: swipeStyle, eventHandlers } = useSwipe(swipeKey, {
+                onSwipeLeft: handleNextCard,
+                onSwipeRight: handleNextCard,
             });
 
-            genreSelect.addEventListener('change', handleGenreChange);
+            const handleGenreSelect = (genre) => {
+                setSelectedGenre(genre);
+                setCurrentImageIndex(1);
+                setIsAnswerVisible(false);
+            };
 
-            revealBtn.addEventListener('click', () => {
-                isAnswerVisible = !isAnswerVisible;
-                imageCover.classList.toggle('opacity-0', isAnswerVisible);
-                revealBtnText.textContent = isAnswerVisible ? '隠す' : '答えを見る';
-                revealBtnIcon.textContent = isAnswerVisible ? '✅' : '👁️';
-            });
+            const currentImageSrc = useMemo(() => {
+                if (!currentGenreInfo) return undefined;
+                return getImagePath(currentGenreInfo, currentImageIndex);
+            }, [currentGenreInfo, currentImageIndex]);
+            
+            const nextImageSrc = useMemo(() => {
+                if (!currentGenreInfo) return undefined;
+                const nextIndex = (currentImageIndex % currentGenreInfo.count) + 1;
+                return getImagePath(currentGenreInfo, nextIndex);
+            }, [currentGenreInfo, currentImageIndex]);
 
-            genreMenuBtn.addEventListener('click', () => genreModal.classList.remove('hidden'));
-            closeModalBtn.addEventListener('click', () => genreModal.classList.add('hidden'));
-            genreModal.addEventListener('click', (e) => {
-                if (e.target === genreModal) genreModal.classList.add('hidden');
-            });
+            const answerText = selectedGenre ? `${selectedGenre} #${currentImageIndex}` : '';
+            
+            const nextAnswerText = useMemo(() => {
+                 if (!currentGenreInfo) return '';
+                 const nextIndex = (currentImageIndex % currentGenreInfo.count) + 1;
+                 return `${selectedGenre} #${nextIndex}`;
+            },[currentGenreInfo, currentImageIndex, selectedGenre]);
 
-            imageCard.addEventListener('mousedown', handleDragStart);
-            imageCard.addEventListener('mousemove', handleDragMove);
-            imageCard.addEventListener('mouseup', handleDragEnd);
-            imageCard.addEventListener('mouseleave', handleDragEnd);
 
-            imageCard.addEventListener('touchstart', handleDragStart, { passive: true });
-            imageCard.addEventListener('touchmove', handleDragMove, { passive: false });
-            imageCard.addEventListener('touchend', handleDragEnd);
+            return (
+                <div className="relative w-screen h-screen max-w-sm mx-auto bg-black overflow-hidden">
+                    <div className="absolute inset-x-4 inset-y-16 card-stack">
+                        {/* Behind Card */}
+                        {selectedGenre && (
+                             <Flashcard
+                                isPlaceholder={false}
+                                imageSrc={nextImageSrc}
+                                answerText={nextAnswerText}
+                                isAnswerVisible={false}
+                                style={{ transform: 'translateY(20px) scale(0.95)', zIndex: 1 }}
+                            />
+                        )}
+                        
+                        {/* Main Card */}
+                        <Flashcard
+                            isPlaceholder={!selectedGenre}
+                            imageSrc={currentImageSrc}
+                            answerText={answerText}
+                            isAnswerVisible={isAnswerVisible}
+                            style={swipeStyle}
+                            zIndex={2}
+                            eventHandlers={currentGenreInfo ? eventHandlers : undefined}
+                        />
+                    </div>
 
-            showPlaceholder();
-        });
+                    {/* Floating UI */}
+                    <div className="absolute top-4 right-4 z-30">
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="w-12 h-12 bg-black/30 backdrop-blur-md text-white rounded-full flex items-center justify-center floating-button"
+                            aria-label="Open genre menu"
+                        >
+                            <MenuIcon className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <div className="absolute bottom-6 right-6 z-30">
+                        <button
+                            id="reveal-btn"
+                            onClick={() => setIsAnswerVisible(v => !v)}
+                            disabled={!selectedGenre}
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            <span>{isAnswerVisible ? '✅' : '👁️'}</span>
+                            <span>{isAnswerVisible ? '隠す' : '答えを見る'}</span>
+                        </button>
+                    </div>
+
+                    <GenreModal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        onGenreSelect={handleGenreSelect}
+                        genres={IMAGE_DATA}
+                    />
+                </div>
+            );
+        }
+
+        // --- Mount Application ---
+        const rootElement = document.getElementById('root');
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>
+        );
     </script>
 </body>
 </html>
