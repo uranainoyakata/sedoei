@@ -6,11 +6,14 @@
     <title>AI Flashcard Learner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      html, body {
+      html, body, #root {
         width: 100%;
         height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      html, body {
         overflow: hidden;
-        position: fixed;
       }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -312,7 +315,7 @@
 
 
             return (
-                <div className="relative w-screen h-screen max-w-sm mx-auto bg-black overflow-hidden">
+                <div className="relative w-screen h-[100dvh] max-w-sm mx-auto bg-black overflow-hidden">
                     <div className="absolute inset-x-4 inset-y-16 card-stack">
                         {/* Behind Card */}
                         {selectedGenre && (
@@ -354,7 +357,7 @@
                             className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             <span>{isAnswerVisible ? '✅' : '👁️'}</span>
-                            <span>{isAnswerVisible ? '隠す' : '見る'}</span>
+                            <span>{isAnswerVisible ? '隠す' : ''}</span>
                         </button>
                     </div>
 
@@ -379,7 +382,3 @@
     </script>
 </body>
 </html>
-
-
-
-
