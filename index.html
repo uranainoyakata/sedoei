@@ -22,16 +22,6 @@
         .card.dragging {
             transition: none;
         }
-        .card-shadow {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-        .answer-overlay {
-            background: linear-gradient(to top,
-                rgba(0,0,0,0.9) 0%,
-                rgba(0,0,0,0.7) 30%,
-                rgba(0,0,0,0.3) 70%,
-               transparent 100%);
-        }
         .prev-indicator {
             background: linear-gradient(45deg, #3b82f6, #1d4ed8);
             transform: rotate(-15deg);
@@ -46,6 +36,11 @@
         }
         .floating-button:active {
             transform: scale(0.95);
+        }
+        /* 写真の下部を隠すカバー */
+        #image-cover {
+            height: 25%; /* 下部4分の1を覆う */
+            transition: opacity 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -74,11 +69,11 @@
 
                 <img id="image" src="" alt="暗記用の画像" class="w-full h-full object-contain hidden">
 
-                <div id="answer-overlay" class="absolute inset-0 answer-overlay opacity-0 transition-opacity duration-300 flex items-end justify-center p-4">
-                     <div class="text-center w-full">
-                        <div class="bg-black/30 backdrop-blur-md rounded-xl p-4">
-                            <p class="text-white text-lg font-bold" id="answer-text">答え</p>
-                        </div>
+                <!-- 写真の下部を隠すカバー -->
+                <div id="image-cover" class="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4">
+                    <div class="text-center">
+                        <p class="text-white text-lg font-bold" id="answer-text">答えは隠されています</p>
+                        <p class="text-gray-300 text-sm">ボタンを押して表示</p>
                     </div>
                 </div>
             </div>
@@ -90,7 +85,7 @@
         </div>
         
         <div class="absolute bottom-6 right-6 z-30">
-            <button id="reveal-btn" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2" disabled>
+            <button id="reveal-btn" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-5 rounded-full floating-button disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2">
                 <span id="reveal-btn-icon">👁️</span>
                 <span id="reveal-btn-text">答えを見る</span>
             </button>
@@ -138,7 +133,7 @@
             const genreSelect = document.getElementById('genre-select');
             const imageCard = document.getElementById('image-card');
             const imageElem = document.getElementById('image');
-            const answerOverlay = document.getElementById('answer-overlay');
+            const imageCover = document.getElementById('image-cover');
             const answerText = document.getElementById('answer-text');
             const revealBtn = document.getElementById('reveal-btn');
             const revealBtnText = document.getElementById('reveal-btn-text');
@@ -150,17 +145,17 @@
             const genreModal = document.getElementById('genre-modal');
             const closeModalBtn = document.getElementById('close-modal-btn');
 
-
             let currentGenreInfo = null;
             let currentImageNumber = 1;
             let isDragging = false;
             let startX = 0, startY = 0, currentX = 0, currentY = 0;
+            let isAnswerVisible = false;
 
             // 初期状態の設定
             function showPlaceholder() {
                 placeholder.classList.remove('hidden');
                 imageElem.classList.add('hidden');
-                answerOverlay.style.opacity = '0';
+                imageCover.classList.add('opacity-0');
                 revealBtn.disabled = true;
             }
 
@@ -183,15 +178,15 @@
                 currentImageNumber = imageNumber;
                 const imagePath = `${currentGenreInfo.path}${imageNumber}.${currentGenreInfo.extension}`;
                 
-                answerText.textContent = `${genreSelect.value} #${imageNumber}`;
-
                 imageElem.src = imagePath;
                 hidePlaceholder();
 
-                answerOverlay.style.opacity = '0';
+                // 答えを隠す状態にリセット
+                isAnswerVisible = false;
+                imageCover.classList.remove('opacity-0');
+                answerText.textContent = `${genreSelect.value} #${imageNumber}`;
                 revealBtnText.textContent = '答えを見る';
                 revealBtnIcon.textContent = '👁️';
-                revealBtn.disabled = false;
 
                 prevIndicator.style.opacity = '0';
                 nextIndicator.style.opacity = '0';
@@ -297,14 +292,15 @@
             genreSelect.addEventListener('change', handleGenreChange);
 
             revealBtn.addEventListener('click', () => {
-                if (answerOverlay.style.opacity === '1') {
-                    answerOverlay.style.opacity = '0';
-                    revealBtnText.textContent = '答えを見る';
-                    revealBtnIcon.textContent = '👁️';
-                } else {
-                    answerOverlay.style.opacity = '1';
+                isAnswerVisible = !isAnswerVisible;
+                if (isAnswerVisible) {
+                    imageCover.classList.add('opacity-0');
                     revealBtnText.textContent = '隠す';
                     revealBtnIcon.textContent = '✅';
+                } else {
+                    imageCover.classList.remove('opacity-0');
+                    revealBtnText.textContent = '答えを見る';
+                    revealBtnIcon.textContent = '👁️';
                 }
             });
 
@@ -344,4 +340,5 @@
     </script>
 </body>
 </html>
+
 
