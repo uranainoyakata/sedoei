@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>せどらー養成所</title>
+    <title>AI Flashcard Learner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       html, body, #root {
@@ -60,13 +60,12 @@
 
         // --- Constants ---
         const IMAGE_DATA = {
-            "GUCCI鞄": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
+            "GUCCIかばん": { path: "images/gushikaban/", count: 56, extension: "jpeg" },
             "GUCCI財布": { path: "images/gutisaihu/", count: 13, extension: "jpeg" },
-            "ビトン鞄": { path: "images/bitonbagu/", count: 2, extension: "jpeg" },
-            "ビトン財布": { path: "images/bitonsaihu/", count: 11, extension: "jpeg" },
-            "シャネルバッグ": { path: "images/shanerubagu/", count: 17, extension: "jpeg" },
-            "シャネル財布": { path: "images/shanerusaihu/", count: 20, extension: "jpeg" },
-            "バーバリー鞄": { path: "images/babaribagu/", count: 2, extension: "jpeg" },
+            "ビトンかばん": { path: "images/cats/", count: 25, extension: "jpeg" },
+            "Classic Cars": { path: "images/cars/", count: 18, extension: "jpeg" },
+            "Space & Cosmos": { path: "images/space/", count: 22, extension: "jpeg" },
+            "歴史": { path: "images/history/", count: 15, extension: "jpeg" },
         };
 
         const getImagePath = (genreInfo, imageNumber) => {
@@ -108,7 +107,7 @@
                         <>
                             <img src={imageSrc} alt="Flashcard image" className="w-full h-full object-contain" />
                             <div 
-                                className={`absolute bottom-0 left-0 right-0 h-3/10 transition-opacity duration-300 pointer-events-none ${isAnswerVisible ? 'opacity-0' : 'opacity-100'}`}
+                                className={`absolute bottom-0 left-0 right-0 h-1/4 transition-opacity duration-300 pointer-events-none ${isAnswerVisible ? 'opacity-0' : 'opacity-100'}`}
                             >
                                 <div className="absolute inset-0 bg-black/50 backdrop-blur-md" />
                                 <div className="relative w-full h-full flex items-center justify-center text-center p-4">
