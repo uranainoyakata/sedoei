@@ -198,7 +198,8 @@
             );
         };
         
-        const useSwipe = (key, { onSwipeLeft, onSwipeRight, onSwipeMove }) => {
+        // ▼▼▼ 修正点 1 of 3 ▼▼▼
+        const useSwipe = (key, { onSwipeLeft, onSwipeRight, onSwipeMove, onSwipeStart }) => {
             const [style, setStyle] = useState({
                 transform: 'translateX(0px) rotate(0deg)',
                 transition: 'none',
@@ -265,11 +266,12 @@
                     } else {
                         onSwipeRight();
                     }
-                }, 200);
+                }, 500);
 
             }, [handleSwipeMoveInternal, onSwipeLeft, onSwipeRight, onSwipeMove]);
 
             const handleSwipeStartInternal = useCallback((e) => {
+                onSwipeStart?.(); // スワイプ開始時にコールバックを呼ぶ
                 isSwiping.current = true;
                 startX.current = e.touches ? e.touches[0].pageX : e.pageX;
                 currentX.current = startX.current;
@@ -278,7 +280,7 @@
                 document.addEventListener('mouseup', handleSwipeEndInternal);
                 document.addEventListener('touchmove', handleSwipeMoveInternal, { passive: false });
                 document.addEventListener('touchend', handleSwipeEndInternal);
-            }, [handleSwipeMoveInternal, handleSwipeEndInternal]);
+            }, [handleSwipeMoveInternal, handleSwipeEndInternal, onSwipeStart]);
 
             return {
                 style,
@@ -315,6 +317,15 @@
                 setSwipeOffset(0);
             };
             
+            // ▼▼▼ 修正点 2 of 3 ▼▼▼
+            // スワイプ開始時に答えを隠す状態に戻す関数
+            const handleSwipeStart = () => {
+                // 「答えを隠す」モードの時だけ、表示状態をリセットする
+                if (studyMode === 'hide') {
+                    setIsAnswerVisible(false);
+                }
+            };
+            
             useEffect(() => {
                 if (selectedGenre) {
                   setIsAnswerVisible(studyMode === 'reveal');
@@ -322,10 +333,12 @@
             }, [studyMode, selectedGenre]);
             
             const swipeKey = `${selectedGenre}-${currentImageIndex}`;
+            // ▼▼▼ 修正点 3 of 3 ▼▼▼
             const { style: swipeStyle, eventHandlers } = useSwipe(swipeKey, {
                 onSwipeLeft: handleNextCard,
                 onSwipeRight: handleNextCard,
                 onSwipeMove: setSwipeOffset,
+                onSwipeStart: handleSwipeStart, // 作成した関数を渡す
             });
 
             const currentImageSrc = useMemo(() => {
@@ -361,8 +374,6 @@
                              <Flashcard
                                 isPlaceholder={false}
                                 imageSrc={nextImageSrc}
-                                // ▼▼▼ 修正点 ▼▼▼
-                                // 次のカードの答え表示を、現在の学習モードに連動させる
                                 isAnswerVisible={studyMode === 'reveal'}
                                 style={behindCardStyle}
                             />
