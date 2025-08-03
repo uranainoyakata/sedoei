@@ -125,7 +125,6 @@
             );
         };
 
-        // ▼▼▼ ここから変更 ▼▼▼
         const GenreModal = ({ isOpen, onClose, onGenreSelect, genres, currentMode, onModeChange }) => {
             if (!isOpen) {
                 return null;
@@ -160,7 +159,6 @@
                             ))}
                         </select>
 
-                        {/* --- ここから追加 --- */}
                         <div className="mt-6">
                             <h3 className="text-lg font-semibold text-gray-700 mb-3">学習モード</h3>
                             <div className="space-y-2">
@@ -188,7 +186,6 @@
                                 </label>
                             </div>
                         </div>
-                        {/* --- ここまで追加 --- */}
 
                         <button 
                             onClick={onClose}
@@ -200,9 +197,7 @@
                 </div>
             );
         };
-        // ▲▲▲ ここまで変更 ▲▲▲
         
-        // --- Hooks ---
         const useSwipe = (key, { onSwipeLeft, onSwipeRight, onSwipeMove }) => {
             const [style, setStyle] = useState({
                 transform: 'translateX(0px) rotate(0deg)',
@@ -301,16 +296,14 @@
             const [isAnswerVisible, setIsAnswerVisible] = useState(false);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [swipeOffset, setSwipeOffset] = useState(0);
-            const [studyMode, setStudyMode] = useState('hide'); // 'hide' or 'reveal' を管理 (追加)
+            const [studyMode, setStudyMode] = useState('hide'); 
 
             const currentGenreInfo = selectedGenre ? IMAGE_DATA[selectedGenre] : null;
 
-            // ▼▼▼ ここから変更 ▼▼▼
             const handleNextCard = () => {
                 if (!currentGenreInfo) return;
                 const nextIndex = (currentImageIndex % currentGenreInfo.count) + 1;
                 setCurrentImageIndex(nextIndex);
-                // モードに応じて答えの表示状態を決定
                 setIsAnswerVisible(studyMode === 'reveal');
                 setSwipeOffset(0);
             };
@@ -318,18 +311,15 @@
             const handleGenreSelect = (genre) => {
                 setSelectedGenre(genre);
                 setCurrentImageIndex(1);
-                // モードに応じて答えの表示状態を決定
                 setIsAnswerVisible(studyMode === 'reveal');
                 setSwipeOffset(0);
             };
             
-            // モードが変更されたときに、現在のカードの答え表示を更新する
             useEffect(() => {
                 if (selectedGenre) {
                   setIsAnswerVisible(studyMode === 'reveal');
                 }
             }, [studyMode, selectedGenre]);
-            // ▲▲▲ ここまで変更 ▲▲▲
             
             const swipeKey = `${selectedGenre}-${currentImageIndex}`;
             const { style: swipeStyle, eventHandlers } = useSwipe(swipeKey, {
@@ -371,7 +361,9 @@
                              <Flashcard
                                 isPlaceholder={false}
                                 imageSrc={nextImageSrc}
-                                isAnswerVisible={false}
+                                // ▼▼▼ 修正点 ▼▼▼
+                                // 次のカードの答え表示を、現在の学習モードに連動させる
+                                isAnswerVisible={studyMode === 'reveal'}
                                 style={behindCardStyle}
                             />
                         )}
@@ -398,8 +390,6 @@
                         </button>
                     </div>
 
-                    {/* ▼▼▼ ここから変更 ▼▼▼ */}
-                    {/* studyModeが 'hide' の時だけボタンを表示 */}
                     {studyMode === 'hide' && (
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-30" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
                             <button
@@ -413,17 +403,14 @@
                             </button>
                         </div>
                     )}
-                    {/* ▲▲▲ ここまで変更 ▲▲▲ */}
 
                     <GenreModal
                         isOpen={isModalOpen}
                         onClose={() => setIsModalOpen(false)}
                         onGenreSelect={handleGenreSelect}
                         genres={IMAGE_DATA}
-                        // --- ここから追加 ---
                         currentMode={studyMode}
                         onModeChange={setStudyMode}
-                        // --- ここまで追加 ---
                     />
                 </div>
             );
